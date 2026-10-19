@@ -55,9 +55,6 @@ export function UnicornTeam() {
             <p>
               Building on the legacy of Guru Om Services, an established name in the metal and scrap industries, we extend a foundation of trust and entrepreneurship into the world of technology.
             </p>
-            <p>
-              From custom-built business systems to AI-powered applications and scalable digital infrastructure, our approach is grounded in practical thinking, purposeful engineering, and long-term value.
-            </p>
           </div>
         </div>
 
