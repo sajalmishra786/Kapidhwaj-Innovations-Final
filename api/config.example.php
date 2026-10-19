@@ -37,7 +37,7 @@ return [
     'to_name'    => 'Kapidhwaj Innovations',
 
     // Optional extra recipients.
-    'cc_email' => 'sunny.vinny546@gmail.com',
+    'cc_email' => '',
     'bcc_email' => '',
 
     /* ── Behaviour ───────────────────────────────────────────────────────── */
