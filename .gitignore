@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+*.local
+.DS_Store
+.vite
+*.log
+
+# contact form secrets + php deps
+api/config.php
+api/vendor/
+api/debug.log
+.env
+.env.local

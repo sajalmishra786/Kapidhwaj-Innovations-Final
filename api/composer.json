@@ -1,0 +1,12 @@
+{
+    "name": "kapidhwaj/contact-api",
+    "description": "Contact form mail relay for the Kapidhwaj Innovations landing page.",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}

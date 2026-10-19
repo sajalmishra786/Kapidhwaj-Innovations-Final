@@ -1,0 +1,11 @@
+# Contact API hardening (Apache 2.4).
+
+Options -Indexes
+
+# Credentials and dependency manifests must never be fetched directly.
+<FilesMatch "^(config\.php|config\.example\.php|composer\.(json|lock)|debug\.log)$">
+    Require all denied
+</FilesMatch>
+
+# Block anything under vendor/ from being served as a file.
+RedirectMatch 404 ^/.*/api/vendor/.*$

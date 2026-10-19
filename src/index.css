@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────────────────────────
+   Design tokens — minimal cream theme
+   (mirror tailwind.config.ts)
+   ───────────────────────────────────────────── */
+:root {
+  --color-cream-50: #ffffff;
+  --color-cream-100: #faf8f2;
+  --color-cream-200: #f2efe6;
+  --color-cream-300: #e8e3d6;
+
+  --color-ink-950: #17150f;
+  --color-ink-900: #211e16;
+  --color-ink-800: #3a3527;
+
+  --color-accent-cyan: #0e8c92;
+  --color-accent-violet: #5a45e0;
+  --color-accent-ember: #db5a0e;
+  --color-accent-coral: #e0795e;
+
+  --color-night: #1a1714;
+
+  /* Frosted white card on cream */
+  --glass-fill: rgba(255, 255, 255, 0.55);
+  --glass-stroke: rgba(23, 21, 15, 0.08);
+  --glass-drop: rgba(23, 21, 15, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.75);
+  --glass-blur: 20px;
+
+  --eyebrow-color: var(--color-accent-cyan);
+
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 600ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --nav-height: 4.5rem;
+}
+
+@layer base {
+  * {
+    border-color: rgba(23, 21, 15, 0.1);
+  }
+
+  html {
+    /* Non-static so it's a valid scroll container for Framer's target-based
+       useScroll (default container is document.documentElement); also silences
+       Framer's "non-static position" measurement warning. */
+    position: relative;
+    scroll-behavior: auto; /* Lenis owns smooth scroll */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    -webkit-font-smoothing: antialiased;
+    background-color: var(--color-cream-100);
+    color: var(--color-ink-800);
+  }
+
+  /*
+    There used to be two faint accent washes on a fixed layer here. They were the
+    hairline that kept appearing across the cream sections, and the reason it
+    seemed to travel with the pinned cards in the gallery.
+
+    A fixed layer at z-index -1 is only visible through sections that paint no
+    background of their own. Half this page does paint one — the hero, the stack,
+    both chapter transitions — so at every boundary between an opaque section and
+    a transparent one the wash was switched off on one side and on on the other.
+    That is a hard discontinuity, not a gradient: measured against cream it was up
+    to 9/255 at the left edge of the viewport, tapering to 0 at the right, which is
+    exactly a hairline that fades out as it crosses. And because the wash is fixed
+    to the viewport while the boundary is fixed to the document, the size of the
+    step changed as the page scrolled, so against pinned content it read as a line
+    sliding along.
+
+    A 6%-alpha tint that is invisible over most of the page is not worth a seam at
+    every section join, so it is gone and the cream is now one exact colour
+    throughout. Ambient interest is carried where it belongs — StackBackdrop's
+    blobs, the gradient headings, the grain — inside sections that own it.
+  */
+
+  ::selection {
+    background: rgba(14, 140, 146, 0.18);
+    color: var(--color-ink-950);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+    color: var(--color-ink-950);
+    text-wrap: balance;
+  }
+
+  /* Custom scrollbar — restrained on light */
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-cream-100);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(var(--color-accent-violet), var(--color-accent-cyan));
+    border-radius: 999px;
+    border: 2px solid var(--color-cream-100);
+  }
+}
+
+@layer components {
+  /* Frosted glass surface — navbar, cards, inputs */
+  .glass {
+    background: var(--glass-fill);
+    backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    border: 1px solid var(--glass-stroke);
+    box-shadow:
+      0 10px 36px -16px var(--glass-drop),
+      inset 0 1px 0 0 var(--glass-highlight);
+  }
+
+  .text-gradient {
+    background: linear-gradient(
+      110deg,
+      var(--color-accent-cyan),
+      var(--color-accent-violet) 55%,
+      var(--color-accent-ember)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.35em;
+    color: var(--eyebrow-color);
+  }
+
+  /*
+    The dark chapter — everything from the "growth" hand-off down to the footer.
+    It re-points the tokens the shared pieces read (glass, eyebrow, gradient text)
+    so those components need no dark variants of their own. Cyan and violet are
+    chosen to read on cream and sink into this surface, so the accents lighten.
+  */
+  .night-chapter {
+    --eyebrow-color: var(--color-accent-coral);
+    --glass-fill: rgba(255, 255, 255, 0.05);
+    --glass-stroke: rgba(255, 255, 255, 0.1);
+    --glass-drop: rgba(0, 0, 0, 0.5);
+    --glass-highlight: rgba(255, 255, 255, 0.08);
+  }
+
+  .night-chapter .text-gradient {
+    background-image: linear-gradient(110deg, #5fd3d9, #a592ff 55%, #f0956f);
+  }
+
+  /* Subtle paper grain */
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+/* Seamless marquee: track is duplicated, so -50% lands on the copy. */
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes marquee-rev {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+/* Respect reduced-motion globally as a safety net.
+   Component-level logic also gates JS-driven motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

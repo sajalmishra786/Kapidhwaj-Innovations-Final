@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { 
+    background: #FAF8F2; 
+    margin: 0; 
+    overflow: hidden; 
+    height: 100vh; 
+    display: flex; 
+    align-items: flex-end; 
+    justify-content: center; 
+    perspective: 600px; /* The perspective creates the 3D space */
+  }
+  .flare-container {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    perspective: 800px;
+    transform-style: preserve-3d;
+  }
+  .flare {
+    /* Make it a huge circle */
+    width: 250vw;
+    height: 250vw;
+    background: radial-gradient(circle at 50% 50%, 
+      #1A1714 0%, 
+      #1A1714 50%, 
+      #4A1608 55%, 
+      #8E2A08 60%, 
+      #E2650E 65%, 
+      #F7AC22 70%, 
+      #FEF7D2 85%, 
+      transparent 95%);
+    /* Rotate it backwards so the top is far away (narrow) and bottom is close (wide) */
+    transform: rotateX(60deg) translateY(20%);
+    border-radius: 50%;
+    transform-origin: bottom center;
+  }
+</style>
+</head>
+<body>
+  <div class="flare-container">
+    <div class="flare"></div>
+  </div>
+</body>
+</html>
