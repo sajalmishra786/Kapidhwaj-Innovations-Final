@@ -38,7 +38,7 @@ export function Marquee({
             {items.map((item, i) => (
               <li
                 key={`${item.name}-${i}`}
-                className="glass flex h-20 shrink-0 items-center justify-center rounded-2xl px-8 py-5 transition-colors hover:bg-white/80"
+                className="flex h-20 shrink-0 items-center justify-center rounded-2xl border border-ink-900/15 bg-white/50 px-8 py-5 shadow-sm transition-colors hover:border-ink-900/25 hover:bg-white/80"
               >
                 <img
                   src={item.logo}
