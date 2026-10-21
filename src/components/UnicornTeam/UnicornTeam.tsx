@@ -50,10 +50,13 @@ export function UnicornTeam() {
           />
           <div className="mt-6 max-w-xl space-y-4 text-[0.95rem] leading-relaxed text-ink-900/70 sm:mt-8 sm:text-base sm:leading-relaxed">
             <p>
-              Kapidhwaj Innovations is a technology and engineering partner focused on helping businesses solve meaningful challenges through digital solutions. We work at the intersection of strategy, software, and innovation - understanding the problem before defining the solution.
+              Kapidhwaj Innovations is a technology and engineering company born from the legacy of Guru Om Services. Building on an established foundation in the metal and scrap industries, we are carrying that entrepreneurial legacy forward into the world of software, technology, and digital innovation.
             </p>
             <p>
-              Building on the legacy of Guru Om Services, an established name in the metal and scrap industries, we extend a foundation of trust and entrepreneurship into the world of technology.
+              What began with building businesses through trust, relationships, and a deep understanding of industry now evolves into a new chapter - helping businesses embrace technology, solve complex challenges, and unlock new opportunities for growth.
+            </p>
+             <p>
+              At Kapidhwaj Innovations, we bring this legacy forward through strategic thinking, purposeful engineering, and digital solutions designed to create lasting value.
             </p>
           </div>
         </div>
