@@ -29,7 +29,7 @@ export function UnicornTeam() {
   // Delayed but complete: the team photos read normally first, then the logo
   // orange epicenter blooms softly. Scale peaks at 4.5.
   const circleScale = useTransform(smooth, [0.38, 0.75], [0, 4.5]);
-  const circleOpacity = useTransform(smooth, [0.35, 0.65], [0, 1]);
+  const circleOpacity = useTransform(smooth, [0.35, 0.38], [0, 1]);
 
   return (
     <div ref={sectionRef} className="relative py-12 md:py-24">
