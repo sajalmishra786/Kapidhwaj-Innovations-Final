@@ -10,7 +10,7 @@ export function InfiniteScroll() {
     <div className="relative space-y-8 py-8 sm:space-y-12 sm:py-12">
       <div className="text-center">
         <h2 className="font-mono text-sm font-semibold uppercase tracking-widest text-ink-900/40">
-          Trusted by engineering teams at
+          Our legacy
         </h2>
       </div>
 
