@@ -116,16 +116,16 @@ function TeamCard({ index, src, circleScale, circleOpacity, reduced }: TeamCardP
           aria-hidden
           className="absolute rounded-full will-change-transform"
           style={{
-            width: '500px',
-            height: '500px',
-            left: leftOffset,
-            top: topOffset,
-            x: '-50%',
-            y: '-50%',
-            scale: circleScale,
-            opacity: circleOpacity,
-            background: 'radial-gradient(circle, #FCBA5D 64%, rgba(252,186,93,0) 80%)',
-          }}
+  width: '500px',
+  height: '500px',
+  left: leftOffset,
+  top: topOffset,
+  x: '-50%',
+  y: '-50%',
+  scale: circleScale,
+  opacity: circleOpacity,
+  backgroundColor: '#e9632c',
+}}
         />
       )}
 
