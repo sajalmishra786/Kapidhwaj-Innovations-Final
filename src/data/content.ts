@@ -1,21 +1,5 @@
 import { FiCpu, FiCode, FiLayout, FiTrendingUp, FiShield, FiGrid } from 'react-icons/fi';
 import type { IconType } from 'react-icons';
-
-import {
-  SiVercel,
-  SiStripe,
-  SiGithub,
-  SiFigma,
-  SiLinear,
-  SiRaycast,
-  SiNotion,
-  SiFramer,
-  SiSpotify,
-  SiUber,
-  SiAirbnb,
-  SiOpenai,
-} from 'react-icons/si';
-
 /* ── Hero ────────────────────────────────────────────────── */
 export const HERO = {
   /** One entry per rendered line on wide screens; words reflow on phones. */
@@ -72,25 +56,26 @@ export const HERO_BUBBLES: HeroBubble[] = [
 /* ── Marquee / infinite scroll ───────────────────────────── */
 export interface Partner {
   name: string;
-  icon: IconType;
+  logo: string;
 }
 
 export const PARTNERS_PRIMARY: Partner[] = [
-  { name: 'Vercel', icon: SiVercel },
-  { name: 'Stripe', icon: SiStripe },
-  { name: 'GitHub', icon: SiGithub },
-  { name: 'Figma', icon: SiFigma },
-  { name: 'Linear', icon: SiLinear },
-  { name: 'Raycast', icon: SiRaycast },
+  { name: 'IRCON', logo: '/logos/ircon.png'},
+  { name: 'Jindal Pipes', logo: '/logos/jindal.png'},
+  { name: 'KEC', logo: '/logos/kec.png'},
+  { name: 'L&T', logo: '/logos/l&t.png'},
+  { name: 'M3M', logo: '/logos/m3m.png' },
+  { name: 'NCC', logo: '/logos/ncc.jpg' },
 ];
 
 export const PARTNERS_SECONDARY: Partner[] = [
-  { name: 'Notion', icon: SiNotion },
-  { name: 'Framer', icon: SiFramer },
-  { name: 'Spotify', icon: SiSpotify },
-  { name: 'Uber', icon: SiUber },
-  { name: 'Airbnb', icon: SiAirbnb },
-  { name: 'OpenAI', icon: SiOpenai },
+  { name: 'SAIL', logo: '/logos/sail.jpg'},
+  { name: 'Siemens', logo: '/logos/siemens.jpg'},
+  { name: 'Simplex', logo: '/logos/simplex.png'},
+  { name: 'Tata Steel', logo: '/logos/tata-steel.jpg'},
+  { name: 'VCL', logo: '/logos/vcl.jpg' },
+  { name: 'Shirke', logo: '/logos/shirke.jpg' },
+  { name: 'Ahluwalia', logo: '/logos/ahluwalia.png' },
 ];
 
 export interface Stat {
