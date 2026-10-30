@@ -21,8 +21,8 @@ return [
     'smtp_host'   => 'smtp.hostinger.com',
     'smtp_port'   => 465,
     'smtp_secure' => 'ssl',              // 'tls' for 587, 'ssl' for 465
-    'smtp_user'   => 'support@tsukuyome.in',
-    'smtp_pass'   => 'V3n>G3~@',
+    'smtp_user'   => 'contact@kapidhwajinnovations.com',
+    'smtp_pass'   => '${{ secrets.PASSWORD }}',
 
     /* ── Envelope ────────────────────────────────────────────────────────
        `from_email` MUST be an address the SMTP account is allowed to send as
@@ -30,7 +30,7 @@ return [
        instead will get the mail rejected or spam-foldered by SPF/DMARC.
        The visitor's address is set as Reply-To, so hitting Reply still works.
     */
-    'from_email' => 'support@tsukuyome.in',
+    'from_email' => 'contact@kapidhwajinnovations.com',
     'from_name'  => 'Kapidhwaj Website',
 
     'to_email'   => 'contact@kapidhwajinnovations.com',
