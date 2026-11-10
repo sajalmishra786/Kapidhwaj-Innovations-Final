@@ -18,7 +18,7 @@ return [
          Zoho       smtp.zoho.com         587  tls
          cPanel     mail.yourdomain.com   465  ssl
     */
-    'smtp_host'   => 'smtp.hostinger.com',
+    'smtp_host'   => 'smtp.gmail.com',
     'smtp_port'   => 465,
     'smtp_secure' => 'ssl',              // 'tls' for 587, 'ssl' for 465
     'smtp_user'   => 'contact@kapidhwajinnovations.com',
