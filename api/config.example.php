@@ -19,8 +19,8 @@ return [
          cPanel     mail.yourdomain.com   465  ssl
     */
     'smtp_host'   => 'smtp.gmail.com',
-    'smtp_port'   => 587,
-    'smtp_secure' => 'tls',              // 'tls' for 587, 'ssl' for 465
+    'smtp_port'   => 465,
+    'smtp_secure' => 'ssl',              // 'tls' for 587, 'ssl' for 465
     'smtp_user'   => 'contact@kapidhwajinnovations.com',
     'smtp_pass'   => 'Welcome#026',
 
@@ -55,7 +55,6 @@ return [
         'http://localhost:3000',
         'http://localhost',
         'https://kapidhwajinnovations.com',
-        'https://brown-woodpecker-982026.hostingersite.com/',
         'https://www.kapidhwajinnovations.com',
     ],
 
