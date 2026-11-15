@@ -16,12 +16,12 @@ const dest = fileURLToPath(new URL('../dist/api', import.meta.url));
  * directory. config.php is skipped too: on a static host it would be served as
  * plain text, exposing the SMTP password. On a PHP host, upload it separately.
  */
-const SKIP = new Set(['debug.log', 'config.example.php', 'config.php', '_lib', 'send.ts']);
+const SKIP = new Set(['debug.log', 'config.example.php', 'config.php', '_lib', 'contact.ts']);
 
-// On Vercel the contact form runs as the api/send.ts function; the PHP relay
+// On Vercel the contact form runs as the api/contact.ts function; the PHP relay
 // is not executable there, so don't publish its source into dist/.
 if (process.env.VERCEL) {
-  console.log('[copy-api] Vercel build — skipping PHP relay (api/send.ts handles the form)');
+  console.log('[copy-api] Vercel build — skipping PHP relay (api/contact.ts handles the form)');
   process.exit(0);
 }
 

@@ -8,6 +8,8 @@
  * Always responds with JSON: { ok: bool, message: string, errors?, reference? }
  *
  * vercel.json rewrites /api/send.php here, so the frontend needs no change.
+ * It is not named send.ts because Vercel rejects two files in api/ that share
+ * a name without their extension (send.php is kept for the Hostinger deploy).
  */
 
 import { createHash, randomBytes } from 'node:crypto';

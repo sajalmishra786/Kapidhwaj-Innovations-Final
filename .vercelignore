@@ -1,0 +1,9 @@
+# The PHP contact relay is for the Hostinger deploy only. On Vercel the form is
+# handled by api/contact.ts, and Vercel treats every file in api/ as a possible
+# function, so leaving these in causes name conflicts (send.php vs send.ts,
+# composer.json vs composer.lock) and uploads PHP source for nothing.
+api/*.php
+api/composer.json
+api/composer.lock
+api/vendor
+api/debug.log

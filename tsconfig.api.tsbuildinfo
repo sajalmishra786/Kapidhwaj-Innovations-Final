@@ -1,1 +1,1 @@
-{"root":["./api/send.ts","./api/_lib/config.ts","./api/_lib/templates.ts","./api/_lib/validate.ts"],"version":"5.9.3"}
+{"root":["./api/contact.ts","./api/_lib/config.ts","./api/_lib/templates.ts","./api/_lib/validate.ts"],"version":"5.9.3"}
