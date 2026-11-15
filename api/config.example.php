@@ -33,7 +33,7 @@ return [
     'from_email' => 'contact@kapidhwajinnovations.com',
     'from_name'  => 'Kapidhwaj Website',
 
-    'to_email'   => 'sajal.mishra@kapidhwajinnovations.com',
+    'to_email'   => 'contact@kapidhwajinnovations.com',
     'to_name'    => 'Kapidhwaj Innovations',
 
     // Optional extra recipients.
