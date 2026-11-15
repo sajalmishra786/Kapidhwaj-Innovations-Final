@@ -15,6 +15,7 @@ import { useWheelLayout } from './useWheelLayout';
 import { useSequentialStep } from './useSequentialStep';
 import { stepFromProgress, trackHeight } from './steps';
 import { WHEEL_SPACING_DEG, type WheelLayout } from './wheelLayout';
+import { NIGHT_HANDOFF_OVERLAP } from '@/components/NightRise/handoff';
 
 const TOTAL = TIMELINE.length;
 const RADIUS = 50;
@@ -127,7 +128,13 @@ export function CircleScroll() {
   if (reduced) return <StaticLoop />;
 
   return (
-    <div ref={ref} className="relative" style={{ background: BG, height: `${trackHeight(TOTAL)}svh` }}>
+    <div
+      ref={ref}
+      className="relative"
+      // Rides up under the end of the NightRise dome so the heading arrives as the
+      // screen turns dark, not a third of a screen later (see NIGHT_HANDOFF_OVERLAP).
+      style={{ background: BG, height: `${trackHeight(TOTAL)}svh`, marginTop: `calc(-1 * ${NIGHT_HANDOFF_OVERLAP})` }}
+    >
       <div ref={stageRef} className="sticky top-0 h-[100svh] overflow-hidden" style={{ background: BG }}>
         <GrainOverlay />
 

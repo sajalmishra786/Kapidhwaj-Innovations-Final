@@ -1,6 +1,7 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { fileURLToPath, URL } from 'node:url';
+import { phpDevServer, PHP_DEV_HOST, PHP_DEV_PORT } from './scripts/php-dev-server';
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -8,14 +9,15 @@ export default defineConfig(({ mode }) => {
 
   /*
     The contact form posts to `api/send.php`, which only runs if something
-    executes PHP. Vite's dev server does not — it would hand back the file as
-    plain text — so in development we proxy /api straight to Apache (XAMPP).
-    Point VITE_API_PROXY at wherever Apache serves this project's `api/` folder.
+    executes PHP. Vite cannot, so in development `phpDevServer` starts PHP's
+    built-in server on api/ and /api is proxied to it. Set VITE_API_PROXY
+    (e.g. an XAMPP URL) to use an external server instead.
   */
-  const apiProxy = env.VITE_API_PROXY || 'http://localhost/pro-ject/kapidhaj_innovations/api';
+  const externalProxy = env.VITE_API_PROXY;
+  const apiProxy = externalProxy || `http://${PHP_DEV_HOST}:${PHP_DEV_PORT}`;
 
   return {
-    plugins: [react()],
+    plugins: [react(), phpDevServer(!externalProxy)],
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

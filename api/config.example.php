@@ -19,8 +19,8 @@ return [
          cPanel     mail.yourdomain.com   465  ssl
     */
     'smtp_host'   => 'smtp.gmail.com',
-    'smtp_port'   => 465,
-    'smtp_secure' => 'ssl',              // 'tls' for 587, 'ssl' for 465
+    'smtp_port'   => 587,
+    'smtp_secure' => 'tls',              // 'tls' for 587, 'ssl' for 465
     'smtp_user'   => 'contact@kapidhwajinnovations.com',
     'smtp_pass'   => 'phkxzjtozmkoxqfm',
 
@@ -53,7 +53,7 @@ return [
     'allowed_origins' => [
         'http://localhost:5173',
         'http://localhost:3000',
-        'http://localhost',
+        'https://indigo-buffalo-370868.hostingersite.com',
         'https://kapidhwajinnovations.com',
         'https://www.kapidhwajinnovations.com',
     ],

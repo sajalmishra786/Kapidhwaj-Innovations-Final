@@ -33,13 +33,17 @@ const DOME = buildDomeGradient(DOME_CORE, 'max(85vw, 70svh)', '100svh');
  * the top corners too. The sag at the sides is ~19svh and the rim ~20svh, so
  * -50svh leaves the whole shape above the frame.
  *
- * It starts at 118svh rather than just under the edge (104) because this section
+ * The start is measured from the frame's bottom edge, which is `100lvh` (see the
+ * sticky frame below), plus 8svh. Both ends share one `calc(Nlvh + Msvh)` shape so
+ * Framer can interpolate them number-for-number.
+ *
+ * It starts below the edge rather than just under it because this section
  * rides up under the stepper: the dome rises while the stepper's last card is still
  * leaving. The extra 14svh is clearance for that card, which matters most on a short
  * window, where the card fills more of its frame and a fast flick could otherwise
  * graze it for a frame.
  */
-const DOME_Y = ['108svh', '-50svh'] as const;
+const DOME_Y = ['calc(100lvh + 8svh)', 'calc(0lvh + -50svh)'] as const;
 
 /** The dome's flattest state: a line, not a lens. */
 const FLAT = 0.035;
@@ -75,8 +79,12 @@ const RISE_EASE = cubicBezier(0.3, 0.3, 0.6, 1);
 // Slow to leave the flat line, so the opening reads as a horizon rising, not a bulge.
 const OPEN_EASE = cubicBezier(0.55, 0, 0.35, 1);
 
-/** Pinned for 160svh — tight scroll for the dome rise, minimal dwell. */
-const TRACK_HEIGHT = '160svh';
+/**
+ * One frame (100lvh, see the sticky frame) plus 60svh of pinned scroll for the
+ * rise. Written against lvh so the pinned distance is the same 60svh whether or
+ * not Safari's toolbars are showing.
+ */
+const TRACK_HEIGHT = 'calc(100lvh + 60svh)';
 
 /**
  * Light → dark hand-off. A hard line rises from the bottom of the cream page,
@@ -128,7 +136,16 @@ export function NightRise() {
         marginTop: '-30svh',
       }}
     >
-      <div className="sticky top-0 h-[100svh] overflow-hidden" style={{ background: DAY }}>
+      {/*
+        The frame is the *large* viewport, not 100svh. iOS Safari hides its
+        toolbars as you scroll down, and the visible screen then grows past 100svh.
+        A 100svh frame left that bottom band showing the track behind it — cream —
+        as a white strip under the dark dome, right at the hand-off into "Why
+        Choose Us". (Headless browsers and desktop have no dynamic toolbar, so
+        svh = lvh there and it never showed.) 100lvh covers the screen in both
+        toolbar states and, unlike 100dvh, never changes mid-scroll.
+      */}
+      <div className="sticky top-0 h-[100vh] overflow-hidden supports-[height:100lvh]:h-[100lvh]" style={{ background: DAY }}>
         {/* Centring is on this static wrapper: Framer writes one `transform` per
             element, and would overwrite a centring translate on the same node. */}
         <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 w-[104vw] -translate-x-1/2">

@@ -1,1 +1,1 @@
-{"root":["./vite.config.ts"],"version":"5.9.3"}
+{"root":["./vite.config.ts","./scripts/php-dev-server.ts"],"version":"5.9.3"}

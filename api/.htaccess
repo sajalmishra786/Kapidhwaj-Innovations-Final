@@ -3,7 +3,7 @@
 Options -Indexes
 
 # Credentials and dependency manifests must never be fetched directly.
-<FilesMatch "^(config\.php|config\.example\.php|composer\.(json|lock)|debug\.log)$">
+<FilesMatch "^(config\.php|config\.example\.php|templates\.php|composer\.(json|lock)|debug\.log)$">
     Require all denied
 </FilesMatch>
 

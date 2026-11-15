@@ -3,6 +3,7 @@ import type { ServiceCard } from '@/data/content';
 import { fadeUp, scaleIn, stagger, inView } from '@/animations/motionVariants';
 import { cn } from '@/lib/cn';
 import { ServiceHeroCard } from './ServiceHeroCard';
+import { STACK_CONTENT_ATTR } from './useStackFits';
 
 interface ServiceBodyProps {
   service: ServiceCard;
@@ -56,7 +57,11 @@ export function ServiceBody({ service, reduced }: ServiceBodyProps) {
       )}
 
       {/* text column — copy sits at the top and chips anchor the bottom */}
-      <motion.div className="relative z-10 flex h-full flex-col justify-between" {...motionProps}>
+      <motion.div
+        className="relative z-10 flex h-full flex-col justify-between"
+        {...(reduced ? {} : { [STACK_CONTENT_ATTR]: '' })}
+        {...motionProps}
+      >
         <div>
           <div className="flex items-center justify-between gap-4">
             {/* verb kicker — the punchy service identity */}

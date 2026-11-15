@@ -1,10 +1,11 @@
-import type { CSSProperties } from 'react';
+import { forwardRef, useRef, type CSSProperties } from 'react';
 import { motion } from 'framer-motion';
 import { SERVICES } from '@/data/content';
 import { fadeUp, inView } from '@/animations/motionVariants';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/cn';
 import { ServiceBody } from './ServiceBody';
+import { useStackFits } from './useStackFits';
 
 const TOTAL = SERVICES.length;
 const SLOT = 100 / TOTAL; // each tab occupies an equal slice of the card width
@@ -52,6 +53,9 @@ const STACK_VARS = [
   'sm:[--stack-top:8rem] sm:[--tab-rise:3.25rem] sm:[--card-max:clamp(30rem,62svh,46rem)]',
   // two-column from `md`: a landscape card, whatever the orientation
   'md:[--card-max:clamp(27.5rem,48svh,31.5rem)]',
+  // scroll distance the finished stack holds still before leaving (see the
+  // dwell spacer in StackCards)
+  '[--stack-dwell:35svh]',
   // portrait has height to spare: the masthead drops to sit just above the card
   'md:portrait:[--stack-top:var(--stack-top-centred)]',
   // from `lg` the card height scales with the viewport height; on landscape so
@@ -98,10 +102,16 @@ const STACK_CALC = {
  */
 export function StackCards() {
   const reduced = useReducedMotion();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const probeRef = useRef<HTMLDivElement>(null);
+  // Short phones can't fit every card's copy in a viewport-sized card; they get
+  // the natural-height list instead of clipped content.
+  const fits = useStackFits(rootRef, probeRef, !reduced);
 
-  if (reduced) {
+  if (reduced || !fits) {
     return (
       <div className="relative bg-cream-100">
+        <ViewportProbe ref={probeRef} />
         <StackBackdrop />
         <div className={cn(FRAME, 'relative px-4 pb-16 sm:px-6')}>
           <SectionMasthead />
@@ -126,7 +136,8 @@ export function StackCards() {
   }
 
   return (
-    <div className={cn('relative bg-cream-100', STACK_VARS)} style={STACK_CALC}>
+    <div ref={rootRef} className={cn('relative bg-cream-100', STACK_VARS)} style={STACK_CALC}>
+      <ViewportProbe ref={probeRef} />
       <StackBackdrop />
 
       {/*
@@ -212,9 +223,31 @@ export function StackCards() {
           </div>
         </div>
       ))}
+
+      {/*
+        Dwell: lets the finished stack hold still before the section leaves.
+        Without it the sixth card was the only one never pinned — it arrived in
+        normal flow on the same frame the stack released, so a quick flick on iOS
+        skipped straight past it, and in Safari (whose toolbar makes the sticky
+        rect and the scroll position disagree) it landed a few pixels off the
+        cards beneath, showing their edges above it. With the spacer every card,
+        the last included, is held by `sticky` at the same offset. The masthead
+        track above ends `100svh − --stack-top` short of the bottom, so it still
+        releases together with the cards.
+      */}
+      <div aria-hidden className="h-[var(--stack-dwell)]" />
     </div>
   );
 }
+
+/**
+ * Invisible `100svh` box. `useStackFits` reads it for a viewport height that,
+ * unlike `innerHeight`, stays put while iOS Safari's toolbars come and go.
+ */
+const ViewportProbe = forwardRef<HTMLDivElement>((_, ref) => (
+  <div ref={ref} aria-hidden className="pointer-events-none invisible absolute left-0 top-0 h-[100svh] w-px" />
+));
+ViewportProbe.displayName = 'ViewportProbe';
 
 /**
  * "Our Services" masthead — eyebrow over title, nothing else. It carried a

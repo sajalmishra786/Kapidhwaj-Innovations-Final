@@ -2,8 +2,8 @@
 /**
  * Contact form endpoint.
  *
- * Accepts a JSON POST of { name, email, message, company } and relays it to the
- * configured inbox over SMTP via PHPMailer. `company` is a honeypot — real users
+ * Accepts a JSON POST of { name, email, message, kd_hp_7f3 } and relays it to the
+ * configured inbox over SMTP via PHPMailer. `kd_hp_7f3` is a honeypot — real users
  * never see it, so anything submitted in it is treated as a bot and silently
  * accepted without sending.
  *
@@ -16,6 +16,8 @@ declare(strict_types=1);
 
 // Never let a PHP warning leak into the JSON body.
 ini_set('display_errors', '0');
+// Compression would change the body length after Content-Length is set (see respondAndContinue).
+@ini_set('zlib.output_compression', '0');
 error_reporting(E_ALL);
 
 header('Content-Type: application/json; charset=utf-8');
@@ -36,6 +38,7 @@ if (!is_file($configPath)) {
     respond(500, ['ok' => false, 'message' => 'The contact form is not configured yet.']);
 }
 $config = require $configPath;
+require __DIR__ . "/templates.php";
 
 /* ── CORS ────────────────────────────────────────────────────────────────── */
 
@@ -104,10 +107,17 @@ $clean = static function (mixed $v): string {
 $name    = $clean($data['name'] ?? '');
 $email   = $clean($data['email'] ?? '');
 $message = trim((string) ($data['message'] ?? ''));
-$honey   = $clean($data['company'] ?? '');
+// Honeypot. Named so browsers never autofill it (the old `company` name was
+// autofilled, which silently dropped real messages). Must match Contact.tsx.
+$honey   = $clean($data['kd_hp_7f3'] ?? '');
 
-// Bot filled the hidden field. Pretend it worked; send nothing.
+// Bot filled the hidden field. Pretend it worked; send nothing — but log it, so a
+// discarded message is never invisible to whoever runs the site.
 if ($honey !== '') {
+    error_log('[contact] honeypot filled — submission discarded (no email sent)');
+    if (!empty($config['debug'])) {
+        @file_put_contents(__DIR__ . '/debug.log', date('c') . " HONEYPOT: submission discarded, no email sent\n", FILE_APPEND);
+    }
     respond(200, ['ok' => true, 'message' => 'Message sent.']);
 }
 
@@ -152,35 +162,29 @@ if (is_file(__DIR__ . '/vendor/autoload.php')) {
 
 /* ── Compose + send ──────────────────────────────────────────────────────── */
 
-$mail = new PHPMailer\PHPMailer\PHPMailer(true);
+/*
+  Speed. Every SMTP session to Gmail costs ~2.5s before a byte of mail moves
+  (TCP + STARTTLS + AUTH). The old flow opened two sessions back to back — the
+  inbox copy, then the visitor's confirmation — and only then answered the
+  browser, so a visitor watched a spinner for 6–7s. Now:
+
+   1. one session, kept alive, carries both messages (one handshake saved);
+   2. the browser gets its answer as soon as the inbox copy is accepted, and the
+      confirmation goes out after the connection to the browser is closed.
+
+  The success the visitor sees is still real: it is only sent once Gmail has
+  accepted the message to the team inbox.
+*/
+
+// Human-readable reference shown in both emails and on the success screen.
+$ref = 'KI-' . date('ymd') . '-' . strtoupper(bin2hex(random_bytes(2)));
+
+$mail = createMailer($config);
 
 try {
-    $mail->isSMTP();
-    $mail->Host       = $config['smtp_host'];
-    $mail->Port       = (int) $config['smtp_port'];
-    $mail->SMTPAuth   = true;
-    $mail->Username   = $config['smtp_user'];
-    $mail->Password   = $config['smtp_pass'];
-    $mail->CharSet    = 'UTF-8';
-    $mail->Timeout    = 15;
-
-    if (!empty($config['smtp_secure'])) {
-        $mail->SMTPSecure = $config['smtp_secure'] === 'ssl'
-            ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
-            : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-    }
-
-    if (!empty($config['debug'])) {
-        $mail->SMTPDebug   = 2;
-        $mail->Debugoutput = static function (string $str): void {
-            @file_put_contents(__DIR__ . '/debug.log', date('c') . ' ' . $str . "\n", FILE_APPEND);
-        };
-    }
-
-    // From must be an address the SMTP account may send as; the visitor goes in
-    // Reply-To so hitting Reply in your mail client answers them directly.
     $mail->setFrom($config['from_email'], $config['from_name'] ?? '');
     $mail->addAddress($config['to_email'], $config['to_name'] ?? '');
+    // The visitor goes in Reply-To so hitting Reply answers them directly.
     $mail->addReplyTo($email, $name);
 
     if (!empty($config['cc_email']))  { $mail->addCC($config['cc_email']); }
@@ -192,53 +196,16 @@ try {
         'Page'     => $_SERVER['HTTP_REFERER'] ?? 'unknown',
     ];
 
-    $mail->Subject = 'New enquiry from ' . $name;
+    $mail->Subject = 'New enquiry from ' . $name . ' [' . $ref . ']';
+    // Stops Gmail from collapsing separate enquiries into one thread.
+    $mail->addCustomHeader('X-Entity-Ref-ID', $ref);
     $mail->isHTML(true);
-    $mail->Body    = renderHtmlBody($name, $email, $message, $meta);
-    $mail->AltBody = renderTextBody($name, $email, $message, $meta);
+    $mail->Body    = renderHtmlBody($name, $email, $message, $meta, $ref);
+    $mail->AltBody = renderTextBody($name, $email, $message, $meta, $ref);
 
     $mail->send();
-
-    // Delivered — start the cooldown window now.
-    if ($window > 0) {
-        @touch($stampFile);
-    }
-
-    /* Auto-reply — a failure here must not fail the whole request, since the
-       real message already reached the inbox. */
-    if (!empty($config['send_autoreply'])) {
-        try {
-            $reply = new PHPMailer\PHPMailer\PHPMailer(true);
-            $reply->isSMTP();
-            $reply->Host     = $config['smtp_host'];
-            $reply->Port     = (int) $config['smtp_port'];
-            $reply->SMTPAuth = true;
-            $reply->Username = $config['smtp_user'];
-            $reply->Password = $config['smtp_pass'];
-            $reply->CharSet  = 'UTF-8';
-            $reply->Timeout  = 15;
-
-            if (!empty($config['smtp_secure'])) {
-                $reply->SMTPSecure = $config['smtp_secure'] === 'ssl'
-                    ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
-                    : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-            }
-
-            $reply->setFrom($config['from_email'], $config['from_name'] ?? '');
-            $reply->addAddress($email, $name);
-            $reply->addReplyTo($config['to_email'], $config['to_name'] ?? '');
-            $reply->Subject = 'We received your message — Kapidhwaj Innovations';
-            $reply->isHTML(true);
-            $reply->Body    = renderAutoReplyHtml($name, $message);
-            $reply->AltBody = renderAutoReplyText($name, $message);
-            $reply->send();
-        } catch (Throwable $e) {
-            error_log('[contact] auto-reply failed: ' . $e->getMessage());
-        }
-    }
-
-    respond(200, ['ok' => true, 'message' => 'Message sent.']);
 } catch (Throwable $e) {
+    $mail->smtpClose();
     // Log the real reason; return something generic so SMTP details stay private.
     error_log('[contact] send failed: ' . $e->getMessage());
     respond(502, [
@@ -248,65 +215,112 @@ try {
     ]);
 }
 
-/* ── Templates ───────────────────────────────────────────────────────────── */
+// Delivered — start the cooldown window, then let the visitor go.
+if ($window > 0) {
+    @touch($stampFile);
+}
+respondAndContinue(200, ['ok' => true, 'message' => 'Message sent.', 'reference' => $ref]);
 
-function renderHtmlBody(string $name, string $email, string $message, array $meta): string
+/* Auto-reply, on the same SMTP session. The visitor already has their answer,
+   and their message already reached the inbox, so a failure here is logged only. */
+if (!empty($config['send_autoreply'])) {
+    try {
+        $mail->clearAllRecipients();
+        $mail->clearReplyTos();
+        $mail->clearCustomHeaders();
+
+        $mail->addAddress($email, $name);
+        $mail->addReplyTo($config['to_email'], $config['to_name'] ?? '');
+        $mail->Subject = 'We received your message [' . $ref . ']';
+        $mail->addCustomHeader('X-Entity-Ref-ID', $ref);
+        // RFC 3834: an automatic reply. Stops out-of-office loops, and tells
+        // filters this is a one-off transactional message, not a campaign.
+        $mail->addCustomHeader('Auto-Submitted', 'auto-replied');
+        $mail->addCustomHeader('X-Auto-Response-Suppress', 'All');
+        $mail->Body    = renderAutoReplyHtml($name, $message, $ref, $config['to_email']);
+        $mail->AltBody = renderAutoReplyText($name, $message, $ref, $config['to_email']);
+        $mail->send();
+    } catch (Throwable $e) {
+        error_log('[contact] auto-reply failed: ' . $e->getMessage());
+    }
+}
+
+$mail->smtpClose();
+exit;
+
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+
+/** An SMTP mailer configured from config.php, kept alive for more than one message. */
+function createMailer(array $config): PHPMailer\PHPMailer\PHPMailer
 {
-    $e    = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-    $rows = '';
-    foreach ($meta as $k => $v) {
-        $rows .= '<tr><td style="padding:2px 12px 2px 0;color:#8a8577;">' . $e((string) $k)
-               . '</td><td style="color:#3a3527;">' . $e((string) $v) . '</td></tr>';
+    $mail = new PHPMailer\PHPMailer\PHPMailer(true);
+    $mail->isSMTP();
+    $mail->Host          = $config['smtp_host'];
+    $mail->Port          = (int) $config['smtp_port'];
+    $mail->SMTPAuth      = true;
+    $mail->Username      = $config['smtp_user'];
+    $mail->Password      = $config['smtp_pass'];
+    $mail->CharSet       = 'UTF-8';
+    $mail->Encoding      = 'quoted-printable';
+    $mail->Timeout       = 15;
+    $mail->SMTPKeepAlive = true;
+
+    if (!empty($config['smtp_secure'])) {
+        $mail->SMTPSecure = $config['smtp_secure'] === 'ssl'
+            ? PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS
+            : PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
     }
 
-    return '<!doctype html><html><body style="margin:0;background:#faf8f2;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">'
-        . '<div style="max-width:600px;margin:0 auto;padding:32px 24px;">'
-        . '<p style="margin:0 0 4px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8a8577;">Kapidhwaj Innovations</p>'
-        . '<h1 style="margin:0 0 24px;font-size:22px;color:#1a1714;">New website enquiry</h1>'
-        . '<div style="background:#fff;border:1px solid #eae6db;border-radius:14px;padding:24px;">'
-        . '<p style="margin:0 0 6px;font-size:12px;color:#8a8577;">FROM</p>'
-        . '<p style="margin:0 0 20px;font-size:16px;color:#1a1714;"><strong>' . $e($name) . '</strong><br>'
-        . '<a href="mailto:' . $e($email) . '" style="color:#e0795e;">' . $e($email) . '</a></p>'
-        . '<p style="margin:0 0 6px;font-size:12px;color:#8a8577;">MESSAGE</p>'
-        . '<div style="font-size:15px;line-height:1.6;color:#3a3527;white-space:pre-wrap;">' . $e($message) . '</div>'
-        . '</div>'
-        . '<table style="margin-top:16px;font-size:12px;">' . $rows . '</table>'
-        . '<p style="margin-top:20px;font-size:12px;color:#a8a396;">Reply directly to this email to respond to ' . $e($name) . '.</p>'
-        . '</div></body></html>';
-}
-
-function renderTextBody(string $name, string $email, string $message, array $meta): string
-{
-    $out = "New website enquiry\n===================\n\n"
-         . "From:  $name\nEmail: $email\n\nMessage:\n$message\n\n---\n";
-    foreach ($meta as $k => $v) {
-        $out .= "$k: $v\n";
+    /* Deliverability. Without a Hostname, PHPMailer greets Gmail as the machine
+       name (127.0.0.1 / localhost) and stamps Message-IDs with it; both are spam
+       signals. Use the sending domain instead, and make the envelope sender
+       (Return-Path) the same address as From so bounces come home and SPF/DMARC
+       evaluate the right domain. */
+    $domain = substr(strrchr((string) $config['from_email'], '@') ?: '', 1);
+    if ($domain !== '') {
+        $mail->Hostname = $domain;
+        $mail->Helo     = $domain;
     }
-    return $out;
+    $mail->Sender = $config['from_email'];
+
+    if (!empty($config['debug'])) {
+        $mail->SMTPDebug   = 2;
+        $mail->Debugoutput = static function (string $str): void {
+            @file_put_contents(__DIR__ . '/debug.log', date('c') . ' ' . $str . "\n", FILE_APPEND);
+        };
+    }
+
+    return $mail;
 }
 
-function renderAutoReplyHtml(string $name, string $message): string
+/**
+ * Send the JSON response and close the connection to the browser, then keep
+ * running so slow follow-up work (the auto-reply) happens off the visitor's clock.
+ * Uses the server's native hook where there is one (PHP-FPM, LiteSpeed — which
+ * Hostinger runs); otherwise an explicit Content-Length + flush, which the PHP
+ * dev server, Apache mod_php and the Vite proxy all treat as a finished response.
+ */
+function respondAndContinue(int $status, array $payload): void
 {
-    $e     = static fn (string $s): string => htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
-    $first = $e(strtok($name, ' ') ?: $name);
+    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '{}';
 
-    return '<!doctype html><html><body style="margin:0;background:#faf8f2;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">'
-        . '<div style="max-width:600px;margin:0 auto;padding:32px 24px;">'
-        . '<p style="margin:0 0 4px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#8a8577;">Kapidhwaj Innovations</p>'
-        . '<h1 style="margin:0 0 16px;font-size:22px;color:#1a1714;">Thanks, ' . $first . '.</h1>'
-        . '<p style="font-size:15px;line-height:1.65;color:#3a3527;">We have your message and will come back to you within one business day with a point of view and a path forward.</p>'
-        . '<div style="margin-top:20px;background:#fff;border:1px solid #eae6db;border-radius:14px;padding:20px;">'
-        . '<p style="margin:0 0 8px;font-size:12px;color:#8a8577;">YOUR MESSAGE</p>'
-        . '<div style="font-size:14px;line-height:1.6;color:#3a3527;white-space:pre-wrap;">' . $e($message) . '</div></div>'
-        . '<p style="margin-top:24px;font-size:13px;color:#8a8577;">— The Kapidhwaj Innovations team</p>'
-        . '</div></body></html>';
-}
+    ignore_user_abort(true);
+    @set_time_limit(60);
+    http_response_code($status);
+    header('Content-Length: ' . strlen($body));
+    header('Connection: close');
+    echo $body;
 
-function renderAutoReplyText(string $name, string $message): string
-{
-    $first = strtok($name, ' ') ?: $name;
-    return "Thanks, $first.\n\n"
-         . "We have your message and will come back to you within one business day "
-         . "with a point of view and a path forward.\n\n"
-         . "Your message:\n$message\n\n— The Kapidhwaj Innovations team\n";
+    if (function_exists('fastcgi_finish_request')) {
+        fastcgi_finish_request();
+        return;
+    }
+    if (function_exists('litespeed_finish_request')) {
+        litespeed_finish_request();
+        return;
+    }
+    while (ob_get_level() > 0) {
+        ob_end_flush();
+    }
+    flush();
 }
