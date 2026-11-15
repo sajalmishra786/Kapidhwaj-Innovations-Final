@@ -22,7 +22,7 @@ return [
     'smtp_port'   => 587,
     'smtp_secure' => 'tls',              // 'tls' for 587, 'ssl' for 465
     'smtp_user'   => 'contact@kapidhwajinnovations.com',
-    'smtp_pass'   => 'phkxzjtozmkoxqfm',
+    'smtp_pass'   => 'your-app-password',
 
     /* ── Envelope ────────────────────────────────────────────────────────
        `from_email` MUST be an address the SMTP account is allowed to send as

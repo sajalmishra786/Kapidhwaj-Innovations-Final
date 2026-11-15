@@ -11,8 +11,19 @@ import { fileURLToPath, URL } from 'node:url';
 const src = fileURLToPath(new URL('../api', import.meta.url));
 const dest = fileURLToPath(new URL('../dist/api', import.meta.url));
 
-/** Never ship logs or the credential template into a public directory. */
-const SKIP = new Set(['debug.log', 'config.example.php']);
+/**
+ * Never ship logs, credentials or the Node function sources into a public
+ * directory. config.php is skipped too: on a static host it would be served as
+ * plain text, exposing the SMTP password. On a PHP host, upload it separately.
+ */
+const SKIP = new Set(['debug.log', 'config.example.php', 'config.php', '_lib', 'send.ts']);
+
+// On Vercel the contact form runs as the api/send.ts function; the PHP relay
+// is not executable there, so don't publish its source into dist/.
+if (process.env.VERCEL) {
+  console.log('[copy-api] Vercel build — skipping PHP relay (api/send.ts handles the form)');
+  process.exit(0);
+}
 
 try {
   await access(src);
