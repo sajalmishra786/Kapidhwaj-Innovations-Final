@@ -59,5 +59,5 @@ return [
     ],
 
     // Write SMTP conversation logs to api/debug.log. Leave false in production.
-    'debug' => false,
+    'debug' => true,
 ];
